@@ -1,0 +1,2790 @@
+
+
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>IOCL — IS Hardware Request Portal</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+
+    <style>
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+
+
+        :root {
+
+            --orange:      #F37022;
+
+            --orange-dark: #d45e10;
+
+            --orange-soft: rgba(243,112,34,0.12);
+
+            --navy:        #02164F;
+
+            --navy-mid:    #041f6b;
+
+            --white:       #FEFEFE;
+
+            --text-main:   #02164F;
+
+            --text-muted:  rgba(2,22,79,0.55);
+
+            --border:      rgba(2,22,79,0.12);
+
+            --card-shadow: 0 8px 48px rgba(2,22,79,0.13), 0 2px 12px rgba(2,22,79,0.08);
+
+            --success:     #16a34a;
+
+            --danger:      #dc2626;
+
+            --warn:        #d97706;
+
+        }
+
+
+
+        html, body { min-height: 100%; font-family: 'DM Sans', sans-serif; color: var(--text-main); }
+
+        body { background: #eef1f8; background-image: radial-gradient(circle, rgba(2,22,79,0.07) 1px, transparent 1px); background-size: 28px 28px; }
+
+
+
+        /* ── SCREENS ─────────────────────────────────────── */
+
+        .screen { display: none; }
+
+        .screen.active { display: block; }
+
+
+
+        /* ── TOPBAR ──────────────────────────────────────── */
+
+        .topbar {
+
+            background: var(--navy); padding: 0 40px; height: 52px;
+
+            display: flex; align-items: center; justify-content: space-between;
+
+            position: sticky; top: 0; z-index: 100;
+
+            box-shadow: 0 2px 20px rgba(2,22,79,0.3);
+
+        }
+
+        .topbar-brand { font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; color: var(--white); letter-spacing: 1.5px; }
+
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+        .topbar-user { font-size: 13px; color: rgba(255,255,255,0.8); }
+
+        .role-badge {
+
+            background: var(--orange); color: var(--white); font-size: 10px;
+
+            font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+
+            padding: 3px 10px; border-radius: 20px;
+
+        }
+
+        .btn-logout {
+
+            background: none; border: 1px solid rgba(255,255,255,0.2); border-radius: 7px;
+
+            padding: 5px 12px; color: rgba(255,255,255,0.6); font-size: 12px;
+
+            cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+
+        }
+
+        .btn-logout:hover { border-color: var(--orange); color: var(--white); }
+
+
+
+        /* ── DASHBOARD LAYOUT ────────────────────────────── */
+
+        .dash-layout { display: flex; min-height: calc(100vh - 52px); }
+
+
+
+        .sidebar {
+
+            width: 220px; background: var(--white); border-right: 1px solid var(--border);
+
+            padding: 24px 0; flex-shrink: 0; position: sticky; top: 52px;
+
+            height: calc(100vh - 52px); overflow-y: auto;
+
+        }
+
+        .sidebar-section { padding: 0 16px; margin-bottom: 8px; }
+
+        .sidebar-label { font-size: 10px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); padding: 8px 8px 6px; }
+
+        .nav-item {
+
+            display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+
+            border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500;
+
+            color: var(--text-muted); transition: all 0.15s; margin-bottom: 2px;
+
+        }
+
+        .nav-item:hover { background: var(--orange-soft); color: var(--navy); }
+
+        .nav-item.active { background: var(--orange-soft); color: var(--orange); font-weight: 600; }
+
+        .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+
+
+        .dash-content { flex: 1; padding: 32px; overflow-y: auto; }
+
+
+
+        /* ── STATS ROW ───────────────────────────────────── */
+
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 16px; margin-bottom: 28px; }
+
+        .stat-card {
+
+            background: var(--white); border-radius: 12px; padding: 20px;
+
+            box-shadow: var(--card-shadow); border-left: 3px solid var(--border);
+
+            transition: transform 0.15s;
+
+        }
+
+        .stat-card:hover { transform: translateY(-2px); }
+
+        .stat-card.orange { border-left-color: var(--orange); }
+
+        .stat-card.navy   { border-left-color: var(--navy); }
+
+        .stat-card.green  { border-left-color: var(--success); }
+
+        .stat-card.red    { border-left-color: var(--danger); }
+
+        .stat-num { font-family: 'Rajdhani', sans-serif; font-size: 36px; font-weight: 700; color: var(--navy); line-height: 1; }
+
+        .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.8px; }
+
+
+
+        /* ── PANEL ───────────────────────────────────────── */
+
+        .panel { background: var(--white); border-radius: 14px; box-shadow: var(--card-shadow); overflow: hidden; margin-bottom: 24px; }
+
+        .panel-header {
+
+            padding: 18px 24px; border-bottom: 1px solid var(--border);
+
+            display: flex; align-items: center; justify-content: space-between;
+
+        }
+
+        .panel-title { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: var(--navy); letter-spacing: 0.5px; text-transform: uppercase; }
+
+        .panel-body { padding: 24px; }
+
+
+
+        /* ── TABLE ───────────────────────────────────────── */
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+        .data-table th { background: #f4f6fb; padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+
+        .data-table td { padding: 12px 14px; border-bottom: 1px solid rgba(2,22,79,0.05); vertical-align: middle; }
+
+        .data-table tr:last-child td { border-bottom: none; }
+
+        .data-table tr:hover td { background: #f9fafb; }
+
+        .empty-row td { text-align: center; color: var(--text-muted); padding: 32px; font-size: 13px; }
+
+
+
+        /* ── STATUS BADGES ───────────────────────────────── */
+
+        .badge {
+
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+
+            font-size: 10px; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;
+
+        }
+
+        .badge-draft      { background: #f1f5f9; color: #64748b; }
+
+        .badge-submitted  { background: rgba(217,119,6,0.12); color: var(--warn); }
+
+        .badge-approved   { background: rgba(22,163,74,0.12); color: var(--success); }
+
+        .badge-rejected   { background: rgba(220,38,38,0.12); color: var(--danger); }
+
+        .badge-processed  { background: rgba(2,22,79,0.1); color: var(--navy); }
+
+        .badge-closed     { background: #f1f5f9; color: #94a3b8; }
+
+
+
+        /* ── PRIORITY BADGES ─────────────────────────────── */
+
+        .pri-high   { color: var(--danger); font-weight: 600; font-size: 12px; }
+
+        .pri-medium { color: var(--warn); font-weight: 600; font-size: 12px; }
+
+        .pri-low    { color: var(--success); font-weight: 600; font-size: 12px; }
+
+
+
+        /* ── FORM ────────────────────────────────────────── */
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+        .form-grid.full { grid-template-columns: 1fr; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+        .form-group.span2 { grid-column: span 2; }
+
+        .form-label { font-size: 11px; font-weight: 500; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); }
+
+        .form-input, .form-select, .form-textarea {
+
+            background: #f4f6fb; border: 1.5px solid var(--border); border-radius: 9px;
+
+            color: var(--navy); font-family: 'DM Sans', sans-serif; font-size: 14px;
+
+            padding: 10px 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+
+            width: 100%;
+
+        }
+
+        .form-textarea { resize: vertical; min-height: 80px; }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+
+            border-color: var(--orange); background: var(--white); box-shadow: 0 0 0 3px rgba(243,112,34,0.1);
+
+        }
+
+
+
+        /* ── BUTTONS ─────────────────────────────────────── */
+
+        .btn {
+
+            display: inline-flex; align-items: center; gap: 7px;
+
+            padding: 10px 20px; border-radius: 9px; border: none; cursor: pointer;
+
+            font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 600;
+
+            letter-spacing: 0.8px; text-transform: uppercase; transition: all 0.15s;
+
+        }
+
+        .btn-primary { background: var(--navy); color: var(--white); }
+
+        .btn-primary:hover { background: var(--navy-mid); box-shadow: 0 4px 16px rgba(2,22,79,0.25); transform: translateY(-1px); }
+
+        .btn-orange { background: var(--orange); color: var(--white); }
+
+        .btn-orange:hover { background: var(--orange-dark); box-shadow: 0 4px 16px rgba(243,112,34,0.3); transform: translateY(-1px); }
+
+        .btn-success { background: var(--success); color: var(--white); }
+
+        .btn-success:hover { background: #15803d; transform: translateY(-1px); }
+
+        .btn-danger { background: var(--danger); color: var(--white); }
+
+        .btn-danger:hover { background: #b91c1c; transform: translateY(-1px); }
+
+        .btn-ghost { background: none; border: 1.5px solid var(--border); color: var(--text-muted); }
+
+        .btn-ghost:hover { border-color: var(--orange); color: var(--navy); }
+
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+
+
+        /* ── TOAST ───────────────────────────────────────── */
+
+        #toast {
+
+            position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+
+            background: var(--navy); color: var(--white); padding: 12px 20px;
+
+            border-radius: 10px; font-size: 13px; font-weight: 500;
+
+            box-shadow: 0 8px 32px rgba(2,22,79,0.3);
+
+            transform: translateY(80px); opacity: 0; transition: all 0.3s ease;
+
+            max-width: 340px;
+
+        }
+
+        #toast.show { transform: translateY(0); opacity: 1; }
+
+        #toast.success { border-left: 4px solid var(--success); }
+
+        #toast.error   { border-left: 4px solid var(--danger); }
+
+        #toast.info    { border-left: 4px solid var(--orange); }
+
+
+
+        /* ── MODAL ───────────────────────────────────────── */
+
+        .modal-overlay {
+
+            display: none; position: fixed; inset: 0; background: rgba(2,22,79,0.5);
+
+            z-index: 500; align-items: center; justify-content: center;
+
+            backdrop-filter: blur(3px);
+
+        }
+
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+
+            background: var(--white); border-radius: 16px; padding: 32px;
+
+            width: 90%; max-width: 500px; box-shadow: 0 24px 80px rgba(2,22,79,0.3);
+
+            animation: popIn 0.25s ease;
+
+        }
+
+        .modal-title { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 20px; }
+
+        .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+
+
+
+        /* ── PAGE TABS ───────────────────────────────────── */
+
+        .tab-bar { display: flex; gap: 4px; background: #f4f6fb; padding: 4px; border-radius: 10px; margin-bottom: 24px; width: fit-content; }
+
+        .tab-btn {
+
+            padding: 8px 18px; border-radius: 8px; border: none; cursor: pointer;
+
+            font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+
+            color: var(--text-muted); background: none; transition: all 0.15s;
+
+        }
+
+        .tab-btn.active { background: var(--white); color: var(--navy); box-shadow: 0 1px 8px rgba(2,22,79,0.1); font-weight: 600; }
+
+        .tab-panel { display: none; }
+
+        .tab-panel.active { display: block; }
+
+
+
+        /* ── LOADING SPINNER ─────────────────────────────── */
+
+        .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; }
+
+
+
+        /* ── REFRESH BTN ─────────────────────────────────── */
+
+        .refresh-btn { background: none; border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; cursor: pointer; color: var(--text-muted); transition: all 0.15s; display: flex; align-items: center; gap: 5px; font-size: 12px; }
+
+        .refresh-btn:hover { border-color: var(--orange); color: var(--navy); }
+
+        .refresh-btn svg { width: 13px; height: 13px; }
+
+
+
+        /* ── LOGIN PAGE (kept from original) ────────────────── */
+
+        .login-topbar { background: var(--navy); padding: 0 40px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+
+        .login-topbar-brand { font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; color: var(--white); letter-spacing: 1.5px; }
+
+        .topbar-badge { background: var(--orange); color: var(--white); font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+
+        .hero { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 100%); padding: 64px 40px 80px; text-align: center; position: relative; overflow: hidden; }
+
+        .hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 70% 50%, rgba(243,112,34,0.15) 0%, transparent 60%), radial-gradient(circle at 20% 80%, rgba(243,112,34,0.08) 0%, transparent 50%); pointer-events: none; }
+
+        .hero-title { font-family: 'Rajdhani', sans-serif; font-size: clamp(32px, 5vw, 52px); font-weight: 700; color: var(--white); line-height: 1.1; letter-spacing: 0.5px; margin-bottom: 16px; animation: fadeUp 0.5s ease 0.1s both; }
+
+        .hero-title span { color: var(--orange); }
+
+        .hero-desc { font-size: 15px; color: rgba(255,255,255,0.65); max-width: 560px; margin: 0 auto; line-height: 1.7; animation: fadeUp 0.5s ease 0.2s both; }
+
+        .login-main { max-width: 960px; margin: -36px auto 0; padding: 0 24px 60px; position: relative; z-index: 2; }
+
+        .content-grid { display: grid; grid-template-columns: 1fr 400px; gap: 24px; align-items: start; }
+
+        .info-card { background: var(--white); border-radius: 16px; box-shadow: var(--card-shadow); overflow: hidden; animation: fadeUp 0.6s ease 0.35s both; }
+
+        .info-header { background: var(--navy); padding: 20px 28px; }
+
+        .info-header-title { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 600; color: var(--white); letter-spacing: 0.8px; text-transform: uppercase; }
+
+        .info-body { padding: 24px 28px; }
+
+        .workflow { display: flex; flex-direction: column; gap: 0; }
+
+        .wf-step { display: flex; gap: 16px; position: relative; padding-bottom: 24px; }
+
+        .wf-step:last-child { padding-bottom: 0; }
+
+        .wf-step:not(:last-child) .wf-line { position: absolute; left: 15px; top: 32px; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--orange), rgba(243,112,34,0.1)); }
+
+        .wf-num { width: 32px; height: 32px; border-radius: 50%; background: var(--orange); color: var(--white); font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; z-index: 1; }
+
+        .wf-content { padding-top: 4px; }
+
+        .wf-title { font-size: 14px; font-weight: 500; color: var(--navy); margin-bottom: 3px; }
+
+        .wf-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+        .roles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+        .role-chip { background: #f4f6fb; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+
+        .role-chip-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--navy); margin-bottom: 4px; }
+
+        .role-chip-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+        .login-card { background: var(--white); border-radius: 16px; box-shadow: var(--card-shadow); overflow: hidden; animation: fadeUp 0.6s ease 0.4s both; position: sticky; top: 68px; }
+
+        .login-card-header { background: var(--orange); padding: 20px 28px; }
+
+        .login-card-title { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--white); letter-spacing: 0.5px; }
+
+        .login-card-sub { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+
+        .login-body { padding: 28px; }
+
+        .login-form-group { margin-bottom: 18px; }
+
+        .login-form-label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 7px; }
+
+        .input-wrap { position: relative; }
+
+        .input-wrap .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; opacity: 0.35; pointer-events: none; color: var(--navy); }
+
+        input[type="text"], input[type="password"] { width: 100%; background: #f4f6fb; border: 1.5px solid var(--border); border-radius: 9px; color: var(--navy); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 11px 12px 11px 38px; outline: none; transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; }
+
+        input::placeholder { color: var(--text-muted); font-size: 13px; }
+
+        input:focus { border-color: var(--orange); background: var(--white); box-shadow: 0 0 0 3px rgba(243,112,34,0.12); }
+
+        .eye-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 4px; opacity: 0.35; transition: opacity 0.15s; color: var(--navy); }
+
+        .eye-btn:hover { opacity: 0.7; }
+
+        .eye-btn svg { width: 16px; height: 16px; display: block; }
+
+        .btn-login { width: 100%; margin-top: 6px; padding: 13px; background: var(--navy); color: var(--white); font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; border: none; border-radius: 9px; cursor: pointer; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
+
+        .btn-login:hover { background: var(--navy-mid); box-shadow: 0 4px 20px rgba(2,22,79,0.3); transform: translateY(-1px); }
+
+        .btn-login.loading { pointer-events: none; opacity: 0.75; }
+
+        .btn-login .btn-spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto; }
+
+        .btn-login.loading .btn-text { display: none; }
+
+        .btn-login.loading .btn-spinner { display: block; }
+
+        .error-msg { display: none; margin-top: 12px; padding: 10px 13px; background: rgba(243,112,34,0.1); border: 1px solid rgba(243,112,34,0.3); border-radius: 8px; font-size: 12px; color: var(--orange-dark); text-align: center; }
+
+        .error-msg.show { display: block; }
+
+        .demo-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
+
+        .demo-label { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+
+        .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+        .demo-pill { background: #f4f6fb; border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+
+        .demo-pill:hover { background: rgba(243,112,34,0.07); border-color: rgba(243,112,34,0.35); }
+
+        .demo-role { font-size: 10px; font-weight: 600; color: var(--orange-dark); text-transform: uppercase; letter-spacing: 0.8px; }
+
+        .demo-cred { font-size: 11px; color: var(--text-muted); font-family: 'Courier New', monospace; margin-top: 2px; }
+
+        .captcha-box { margin-bottom: 18px; background: #f4f6fb; border: 1.5px solid var(--border); border-radius: 9px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; }
+
+        .captcha-box.error { border-color: var(--orange); animation: shake 0.3s ease; }
+
+        .captcha-question { display: flex; align-items: center; gap: 8px; flex: 1; }
+
+        .captcha-label { font-size: 11px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+
+        .captcha-eq { border-radius: 7px; }
+
+        .captcha-answer { width: 72px; background: var(--white); border: 1.5px solid var(--border); border-radius: 7px; color: var(--navy); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; padding: 6px 10px; outline: none; text-align: center; transition: border-color 0.2s; -moz-appearance: textfield; }
+
+        .captcha-answer::-webkit-outer-spin-button, .captcha-answer::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+        .captcha-answer:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(243,112,34,0.12); }
+
+        .captcha-refresh { background: none; border: none; cursor: pointer; padding: 5px; border-radius: 6px; color: var(--text-muted); transition: color 0.15s, background 0.15s; flex-shrink: 0; }
+
+        .captcha-refresh:hover { color: var(--navy); }
+
+        .captcha-refresh svg { width: 15px; height: 15px; display: block; }
+
+        .site-footer { text-align: center; padding: 20px; font-size: 11px; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--white); }
+
+
+
+        /* ── REPORT CARDS ────────────────────────────────── */
+
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; }
+
+        .report-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: var(--card-shadow); }
+
+        .report-card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; }
+
+        .report-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 12px; }
+
+        .report-bar-label { width: 80px; color: var(--text-muted); }
+
+        .report-bar-track { flex: 1; height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+
+        .report-bar-fill { height: 100%; border-radius: 3px; background: var(--orange); transition: width 0.6s ease; }
+
+        .report-bar-count { width: 24px; text-align: right; font-weight: 600; color: var(--navy); }
+
+
+
+        /* ── ANIMATIONS ──────────────────────────────────── */
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        @keyframes popIn { from { opacity: 0; transform: scale(0.93); } to { opacity: 1; transform: scale(1); } }
+
+
+
+        @media (max-width: 720px) {
+
+            .content-grid { grid-template-columns: 1fr; }
+
+            .login-card { position: static; }
+
+            .dash-layout { flex-direction: column; }
+
+            .sidebar { width: 100%; height: auto; position: static; }
+
+            .form-grid { grid-template-columns: 1fr; }
+
+            .form-group.span2 { grid-column: span 1; }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+
+<!-- ═══════════════════════════════════════════════════
+
+     LOGIN SCREEN
+
+═══════════════════════════════════════════════════ -->
+
+<div id="screen-login" class="screen active">
+
+    <div class="login-topbar">
+
+        <div class="login-topbar-brand">IndianOil</div>
+
+        <div class="topbar-badge">IOCL Internal</div>
+
+    </div>
+
+    <div class="hero">
+
+        <h1 class="hero-title">Hardware<br>Request <span>Portal</span></h1>
+
+        <p class="hero-desc">The official internal platform for raising, tracking, and fulfilling hardware procurement requests across IndianOil's IS department.</p>
+
+    </div>
+
+    <div class="login-main">
+
+        <div class="content-grid">
+
+            <div class="info-card">
+
+                <div class="info-header"><div class="info-header-title">How it works</div></div>
+
+                <div class="info-body">
+
+                    <div class="workflow">
+
+                        <div class="wf-step"><div class="wf-line"></div><div class="wf-num">1</div><div class="wf-content"><div class="wf-title">Employee raises a request</div><div class="wf-desc">Select hardware, provide justification and required date. Saved as draft until submitted.</div></div></div>
+
+                        <div class="wf-step"><div class="wf-line"></div><div class="wf-num">2</div><div class="wf-content"><div class="wf-title">IS GM reviews and approves</div><div class="wf-desc">IS General Manager reviews the justification and approves or rejects with remarks.</div></div></div>
+
+                        <div class="wf-step"><div class="wf-line"></div><div class="wf-num">3</div><div class="wf-content"><div class="wf-title">Processing team fulfils the order</div><div class="wf-desc">Procures the asset, records asset tag and serial number, marks as processed.</div></div></div>
+
+                        <div class="wf-step"><div class="wf-num">4</div><div class="wf-content"><div class="wf-title">Request closed &amp; asset delivered</div><div class="wf-desc">Employee receives hardware and request is closed. Every step logged in audit trail.</div></div></div>
+
+                    </div>
+
+                    <div class="roles-grid">
+
+                        <div class="role-chip"><div class="role-chip-name">Employee</div><div class="role-chip-desc">Raise &amp; track requests</div></div>
+
+                        <div class="role-chip"><div class="role-chip-name">IS GM</div><div class="role-chip-desc">Approve or reject</div></div>
+
+                        <div class="role-chip"><div class="role-chip-name">Processing</div><div class="role-chip-desc">Issue hardware assets</div></div>
+
+                        <div class="role-chip"><div class="role-chip-name">Admin</div><div class="role-chip-desc">Reports &amp; oversight</div></div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="login-card">
+
+                <div class="login-card-header"><div class="login-card-title">Employee Sign In</div><div class="login-card-sub">Use your IS department credentials</div></div>
+
+                <div class="login-body">
+
+                    <div class="login-form-group">
+
+                        <label class="login-form-label" for="empCode">Employee Code</label>
+
+                        <div class="input-wrap">
+
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+
+                            <input type="text" id="empCode" placeholder="e.g. EMP001" autocomplete="username"/>
+
+                        </div>
+
+                    </div>
+
+                    <div class="login-form-group">
+
+                        <label class="login-form-label" for="password">Password</label>
+
+                        <div class="input-wrap">
+
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+
+                            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password"/>
+
+                            <button class="eye-btn" onclick="togglePass()" type="button">
+
+                                <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <div class="captcha-box" id="captchaBox">
+
+                        <div class="captcha-question">
+
+                            <span class="captcha-label">Verify</span>
+
+                            <canvas id="captchaCanvas" width="160" height="50" class="captcha-eq"></canvas>
+
+                        </div>
+
+                        <input type="number" id="captchaAnswer" class="captcha-answer" placeholder="?" autocomplete="off"/>
+
+                        <button class="captcha-refresh" onclick="newCaptcha()" type="button">
+
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+
+                        </button>
+
+                    </div>
+
+                    <button class="btn-login" onclick="handleLogin()" id="loginBtn">
+
+                        <span class="btn-text">Sign In</span>
+
+                        <div class="btn-spinner"></div>
+
+                    </button>
+
+                    <div class="error-msg" id="errorMsg">Invalid employee code or password</div>
+
+                    <div class="demo-section">
+
+                        <div class="demo-label">Quick demo logins</div>
+
+                        <div class="demo-grid">
+
+                            <div class="demo-pill" onclick="fillDemo('EMP001','pass123')">
+                                <div class="demo-role">Employee</div>
+                                <div class="demo-cred">EMP001 / pass123</div>
+                            </div>
+
+                            <div class="demo-pill" onclick="fillDemo('GM001','pass123')">
+                                <div class="demo-role">IS GM</div>
+                                <div class="demo-cred">GM001 / pass123</div>
+                            </div>
+
+                            <div class="demo-pill" onclick="fillDemo('TL001','pass123')">
+                                <div class="demo-role">Processing</div>
+                                <div class="demo-cred">TL001 / pass123</div>
+                            </div>
+
+                            <div class="demo-pill" onclick="fillDemo('ADM001','admin123')">
+                                <div class="demo-role">Admin</div>
+                                <div class="demo-cred">ADM001 / admin123</div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="site-footer">Indian Oil Corporation Limited &nbsp;·&nbsp; IS Department Portal</div>
+
+    <!-- Register link on login card — add inside .login-body after the demo section -->
+    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <span style="font-size:12px;color:var(--text-muted);">New employee? </span>
+        <button onclick="showRegister()" style="background:none;border:none;color:var(--orange);font-size:12px;font-weight:600;cursor:pointer;text-decoration:underline;">Create Account</button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     REGISTER SCREEN
+═══════════════════════════════════════════════════ -->
+<div id="screen-register" class="screen">
+    <div class="login-topbar">
+        <div class="login-topbar-brand">IndianOil · IS Portal</div>
+        <div class="topbar-badge">New Registration</div>
+    </div>
+    <div style="max-width:560px;margin:48px auto;padding:0 24px 60px;">
+        <div style="text-align:center;margin-bottom:32px;">
+            <h1 style="font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--navy);">Create Your Account</h1>
+            <p style="color:var(--text-muted);font-size:14px;margin-top:8px;">Fill in your details. Your account will be active once approved by Admin.</p>
+        </div>
+        <div class="panel">
+            <div class="panel-header" style="background:var(--navy);">
+                <span class="panel-title" style="color:white;">Employee Registration</span>
+            </div>
+            <div class="panel-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Employee Code</label>
+                        <input type="text" class="form-input" id="reg-empcode" placeholder="e.g. EMP022"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-input" id="reg-name" placeholder="Your full name"/>
+                    </div>
+                    <div class="form-group span2">
+                        <label class="form-label">Official Email</label>
+                        <input type="text" class="form-input" id="reg-email" placeholder="yourname@iocl.in"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Department</label>
+                        <select class="form-select" id="reg-dept">
+                            <option value="">Select...</option>
+                            <option>IT</option>
+                            <option>Finance</option>
+                            <option>HR</option>
+                            <option>Operations</option>
+                            <option>Marketing</option>
+                            <option>Projects</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Designation</label>
+                        <input type="text" class="form-input" id="reg-designation" placeholder="e.g. Officer"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Location</label>
+                        <select class="form-select" id="reg-location">
+                            <option value="">Select...</option>
+                            <option>Mumbai</option>
+                            <option>Delhi</option>
+                            <option>Chennai</option>
+                            <option>Kolkata</option>
+                            <option>HQ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mobile No</label>
+                        <input type="text" class="form-input" id="reg-mobile" placeholder="10-digit number"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-input" id="reg-password" placeholder="Min 8 characters"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" class="form-input" id="reg-confirm" placeholder="Repeat password"/>
+                    </div>
+                </div>
+
+                <div id="reg-error" style="display:none;margin-top:12px;padding:10px 13px;background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);border-radius:8px;font-size:12px;color:var(--danger);"></div>
+                <div id="reg-success" style="display:none;margin-top:12px;padding:10px 13px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.3);border-radius:8px;font-size:12px;color:var(--success);"></div>
+
+                <div style="margin-top:20px;display:flex;gap:10px;">
+                    <button class="btn btn-primary" onclick="submitRegistration()" id="reg-btn">Submit Registration</button>
+                    <button class="btn btn-ghost" onclick="showLogin()">Back to Login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- ═══════════════════════════════════════════════════
+
+     EMPLOYEE DASHBOARD
+
+═══════════════════════════════════════════════════ -->
+
+<div id="screen-EMPLOYEE" class="screen">
+
+    <div class="topbar">
+
+        <div class="topbar-brand">IndianOil · IS Portal</div>
+
+        <div class="topbar-right">
+
+            <span class="topbar-user" id="user-EMPLOYEE"></span>
+
+            <span class="role-badge">Employee</span>
+
+            <button class="btn-logout" onclick="logout()">Logout</button>
+
+        </div>
+
+    </div>
+
+    <div class="dash-layout">
+
+        <div class="sidebar">
+
+            <div class="sidebar-section">
+
+                <div class="sidebar-label">Menu</div>
+
+                <div class="nav-item active" onclick="empTab('overview',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+
+                    Overview
+
+                </div>
+
+                <div class="nav-item" onclick="empTab('new',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+
+                    New Request
+
+                </div>
+
+                <div class="nav-item" onclick="empTab('myrequests',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+
+                    My Requests
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="dash-content">
+
+
+
+            <!-- Overview tab -->
+
+            <div id="emp-overview" class="tab-panel active">
+
+                <h2 style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--navy);margin-bottom:6px;">Welcome back, <span id="emp-greeting"></span></h2>
+
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Here's a summary of your hardware requests.</p>
+
+                <div class="stats-row" id="emp-stats">
+
+                    <div class="stat-card navy"><div class="stat-num" id="emp-stat-total">—</div><div class="stat-label">Total Requests</div></div>
+
+                    <div class="stat-card orange"><div class="stat-num" id="emp-stat-pending">—</div><div class="stat-label">Pending Approval</div></div>
+
+                    <div class="stat-card green"><div class="stat-num" id="emp-stat-approved">—</div><div class="stat-label">Approved</div></div>
+
+                    <div class="stat-card red"><div class="stat-num" id="emp-stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+
+                </div>
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <span class="panel-title">Recent Requests</span>
+
+                        <button class="refresh-btn" onclick="loadMyRequests()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
+
+                    </div>
+
+                    <div class="panel-body" style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>Hardware</th><th>Qty</th><th>Priority</th><th>Required By</th><th>Status</th><th>Action</th></tr></thead>
+
+                            <tbody id="emp-recent-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- New Request tab -->
+
+            <div id="emp-new" class="tab-panel">
+
+                <h2 style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--navy);margin-bottom:6px;">New Hardware Request</h2>
+
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Fill in the details below. Your request will be saved as a draft.</p>
+
+                <div class="panel">
+
+                    <div class="panel-header"><span class="panel-title">Request Details</span></div>
+
+                    <div class="panel-body">
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+
+                                <label class="form-label">Hardware Type</label>
+
+                                <select class="form-select" id="hw-type">
+
+                                    <option value="">Select hardware...</option>
+
+                                    <option value="1">Laptop (Computing)</option>
+
+                                    <option value="2">Desktop PC (Computing)</option>
+
+                                    <option value="3">iPad / Tablet (Mobile)</option>
+
+                                    <option value="4">Pendrive (Storage)</option>
+
+                                    <option value="5">External HDD (Storage)</option>
+
+                                    <option value="6">VC Setup (Conference)</option>
+
+                                    <option value="7">Accessories (Peripherals)</option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label class="form-label">Quantity</label>
+
+                                <input type="number" class="form-input" id="hw-qty" min="1" placeholder="e.g. 1"/>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label class="form-label">Priority</label>
+
+                                <select class="form-select" id="hw-priority">
+
+                                    <option value="HIGH">High</option>
+
+                                    <option value="MEDIUM" selected>Medium</option>
+
+                                    <option value="LOW">Low</option>
+
+                                </select>
+
+                            </div>
+
+                            <div class="form-group">
+
+                                <label class="form-label">Required By Date</label>
+
+                                <input type="date" class="form-input" id="hw-date"/>
+
+                            </div>
+
+                            <div class="form-group span2">
+
+                                <label class="form-label">Justification / Reason</label>
+
+                                <textarea class="form-textarea" id="hw-justification" placeholder="Explain why this hardware is needed..."></textarea>
+
+                            </div>
+
+                        </div>
+
+                        <div style="margin-top:20px;display:flex;gap:10px;">
+
+                            <button class="btn btn-primary" onclick="submitNewRequest()">
+
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+
+                                Save as Draft
+
+                            </button>
+
+                            <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- My Requests tab -->
+
+            <div id="emp-myrequests" class="tab-panel">
+
+                <h2 style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--navy);margin-bottom:6px;">My Requests</h2>
+
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">All your hardware requests and their current status.</p>
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <span class="panel-title">All Requests</span>
+
+                        <button class="refresh-btn" onclick="loadMyRequests()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
+
+                    </div>
+
+                    <div style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>Hardware</th><th>Qty</th><th>Priority</th><th>Required By</th><th>Status</th><th>Action</th></tr></thead>
+
+                            <tbody id="emp-all-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+<!-- ═══════════════════════════════════════════════════
+
+     IS GM DASHBOARD
+
+═══════════════════════════════════════════════════ -->
+
+<div id="screen-IS_GM" class="screen">
+
+    <div class="topbar">
+
+        <div class="topbar-brand">IndianOil · IS Portal</div>
+
+        <div class="topbar-right">
+
+            <span class="topbar-user" id="user-IS_GM"></span>
+
+            <span class="role-badge">IS GM</span>
+
+            <button class="btn-logout" onclick="logout()">Logout</button>
+
+        </div>
+
+    </div>
+
+    <div class="dash-layout">
+
+        <div class="sidebar">
+
+            <div class="sidebar-section">
+
+                <div class="sidebar-label">Menu</div>
+
+                <div class="nav-item active" onclick="gmTab('pending',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+
+                    Pending Approvals
+
+                </div>
+
+                <div class="nav-item" onclick="gmTab('approved',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+
+                    Approved
+
+                </div>
+
+                <div class="nav-item" onclick="gmTab('rejected',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+
+                    Rejected
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="dash-content">
+
+
+
+            <!-- Pending tab -->
+
+            <div id="gm-pending" class="tab-panel active">
+
+                <div class="stats-row" style="margin-bottom:20px;">
+
+                    <div class="stat-card orange"><div class="stat-num" id="gm-stat-pending">—</div><div class="stat-label">Awaiting Review</div></div>
+
+                    <div class="stat-card green"><div class="stat-num" id="gm-stat-approved">—</div><div class="stat-label">Approved Today</div></div>
+
+                    <div class="stat-card red"><div class="stat-num" id="gm-stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+
+                </div>
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <span class="panel-title">Pending Approvals</span>
+
+                        <button class="refresh-btn" onclick="loadPending()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
+
+                    </div>
+
+                    <div style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>Hardware ID</th><th>Qty</th><th>Priority</th><th>Required By</th><th>Raised On</th><th>Actions</th></tr></thead>
+
+                            <tbody id="gm-pending-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Approved tab -->
+
+            <div id="gm-approved" class="tab-panel">
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <span class="panel-title">Approved Requests</span>
+
+                        <button class="refresh-btn" onclick="loadGMApproved()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
+
+                    </div>
+
+                    <div style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>Hardware ID</th><th>Qty</th><th>Priority</th><th>Approved By</th><th>Approved Date</th><th>Status</th></tr></thead>
+
+                            <tbody id="gm-approved-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Rejected tab -->
+
+            <div id="gm-rejected" class="tab-panel">
+
+                <div class="panel">
+
+                    <div class="panel-header"><span class="panel-title">Rejected Requests</span></div>
+
+                    <div style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>Hardware ID</th><th>Qty</th><th>Priority</th><th>Status</th></tr></thead>
+
+                            <tbody id="gm-rejected-tbody"><tr class="empty-row"><td colspan="5">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+<!-- ═══════════════════════════════════════════════════
+
+     PROCESSING TEAM DASHBOARD
+
+═══════════════════════════════════════════════════ -->
+
+<div id="screen-PROCESSING_TEAM" class="screen">
+
+    <div class="topbar">
+
+        <div class="topbar-brand">IndianOil · IS Portal</div>
+
+        <div class="topbar-right">
+
+            <span class="topbar-user" id="user-PROCESSING_TEAM"></span>
+
+            <span class="role-badge">Processing</span>
+
+            <button class="btn-logout" onclick="logout()">Logout</button>
+
+        </div>
+
+    </div>
+
+    <div class="dash-layout">
+
+        <div class="sidebar">
+
+            <div class="sidebar-section">
+
+                <div class="sidebar-label">Menu</div>
+
+                <div class="nav-item active" onclick="ptTab('toprocess',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+
+                    To Process
+
+                </div>
+
+                <div class="nav-item" onclick="ptTab('processed',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+
+                    Processed
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="dash-content">
+
+
+
+            <!-- To Process tab -->
+
+            <div id="pt-toprocess" class="tab-panel active">
+
+                <div class="stats-row" style="margin-bottom:20px;">
+
+                    <div class="stat-card orange"><div class="stat-num" id="pt-stat-pending">—</div><div class="stat-label">Ready to Process</div></div>
+
+                    <div class="stat-card green"><div class="stat-num" id="pt-stat-done">—</div><div class="stat-label">Processed</div></div>
+
+                </div>
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <span class="panel-title">Approved — Ready to Issue</span>
+
+                        <button class="refresh-btn" onclick="loadApproved()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
+
+                    </div>
+
+                    <div style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>Hardware ID</th><th>Qty</th><th>Priority</th><th>Approved By</th><th>Approved Date</th><th>Action</th></tr></thead>
+
+                            <tbody id="pt-approved-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Processed tab -->
+
+            <div id="pt-processed" class="tab-panel">
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <span class="panel-title">Processed Requests</span>
+
+                        <button class="refresh-btn" onclick="loadProcessed()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
+
+                    </div>
+
+                    <div style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>Hardware ID</th><th>Qty</th><th>Priority</th><th>Status</th><th>Action</th></tr></thead>
+
+                            <tbody id="pt-processed-tbody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+<!-- ═══════════════════════════════════════════════════
+
+     ADMIN DASHBOARD
+
+═══════════════════════════════════════════════════ -->
+
+<div id="screen-ADMIN" class="screen">
+
+    <div class="topbar">
+
+        <div class="topbar-brand">IndianOil · IS Portal</div>
+
+        <div class="topbar-right">
+
+            <span class="topbar-user" id="user-ADMIN"></span>
+
+            <span class="role-badge">Admin</span>
+
+            <button class="btn-logout" onclick="logout()">Logout</button>
+
+        </div>
+
+    </div>
+
+    <div class="dash-layout">
+
+        <div class="sidebar">
+
+            <div class="sidebar-section">
+
+                <div class="sidebar-label">Menu</div>
+
+                <div class="nav-item active" onclick="adminTab('overview',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+
+                    Overview
+
+                </div>
+
+                <div class="nav-item" onclick="adminTab('allrequests',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+
+                    All Requests
+
+                </div>
+
+                <div class="nav-item" onclick="adminTab('users',this)">
+
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+
+                    Users
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="dash-content">
+
+
+
+            <!-- Overview tab -->
+
+            <div id="admin-overview" class="tab-panel active">
+
+                <h2 style="font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--navy);margin-bottom:6px;">System Overview</h2>
+
+                <p style="color:var(--text-muted);font-size:14px;margin-bottom:24px;">Full visibility across all hardware requests.</p>
+
+                <div class="stats-row">
+
+                    <div class="stat-card navy"><div class="stat-num" id="admin-stat-total">—</div><div class="stat-label">Total Requests</div></div>
+
+                    <div class="stat-card orange"><div class="stat-num" id="admin-stat-submitted">—</div><div class="stat-label">Pending Approval</div></div>
+
+                    <div class="stat-card green"><div class="stat-num" id="admin-stat-approved">—</div><div class="stat-label">Approved</div></div>
+
+                    <div class="stat-card red"><div class="stat-num" id="admin-stat-rejected">—</div><div class="stat-label">Rejected</div></div>
+
+                </div>
+
+                <div class="panel" style="margin-top:8px;">
+
+                    <div class="panel-header"><span class="panel-title">Request Status Breakdown</span><button class="refresh-btn" onclick="loadAdminStats()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button></div>
+
+                    <div class="panel-body" id="admin-report-body">Loading...</div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- All Requests tab -->
+
+            <div id="admin-allrequests" class="tab-panel">
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <span class="panel-title">All Requests</span>
+
+                        <button class="refresh-btn" onclick="loadAllRequests()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh</button>
+
+                    </div>
+
+                    <div style="padding:0;">
+
+                        <table class="data-table">
+
+                            <thead><tr><th>Request No</th><th>User ID</th><th>Hardware</th><th>Qty</th><th>Priority</th><th>Status</th><th>Created</th></tr></thead>
+
+                            <tbody id="admin-all-tbody"><tr class="empty-row"><td colspan="7">Loading...</td></tr></tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Users tab -->
+            <div id="admin-users" class="tab-panel">
+                <!-- Pending Registrations -->
+                <div class="panel" style="margin-bottom:24px;">
+                    <div class="panel-header" style="background:rgba(243,112,34,0.08);">
+                        <span class="panel-title" style="color:var(--orange);">⚠ Pending Registrations</span>
+                        <button class="refresh-btn" onclick="loadPendingRegs()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh
+                        </button>
+                    </div>
+                    <div style="padding:0;">
+                        <table class="data-table">
+                            <thead><tr><th>Emp Code</th><th>Name</th><th>Email</th><th>Department</th><th>Mobile</th><th>Actions</th></tr></thead>
+                            <tbody id="admin-pending-regs"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- All Users -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <span class="panel-title">All Active Users</span>
+                        <button class="refresh-btn" onclick="loadAllUsers()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Refresh
+                        </button>
+                    </div>
+                    <div style="padding:0;">
+                        <table class="data-table">
+                            <thead><tr><th>ID</th><th>Emp Code</th><th>Name</th><th>Department</th><th>Role</th><th>Status</th></tr></thead>
+                            <tbody id="admin-users-tbody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+<!-- ═══════════════════════════════════════════════════
+
+     MODALS
+
+═══════════════════════════════════════════════════ -->
+
+
+
+<!-- Approve/Reject Modal -->
+
+<div class="modal-overlay" id="approveModal">
+
+    <div class="modal">
+
+        <div class="modal-title" id="approveModalTitle">Approve Request</div>
+
+        <div class="form-group">
+
+            <label class="form-label">Request No</label>
+
+            <input type="text" class="form-input" id="modal-reqno" readonly style="background:#f4f6fb;"/>
+
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+
+            <label class="form-label">Remarks (optional)</label>
+
+            <textarea class="form-textarea" id="modal-remarks" placeholder="Add any remarks..."></textarea>
+
+        </div>
+
+        <div class="modal-actions">
+
+            <button class="btn btn-ghost" onclick="closeModal('approveModal')">Cancel</button>
+
+            <button class="btn btn-success" id="modal-approve-btn" onclick="confirmApprove()">Approve</button>
+
+            <button class="btn btn-danger" id="modal-reject-btn" onclick="confirmReject()" style="display:none">Reject</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Process Modal -->
+
+<div class="modal-overlay" id="processModal">
+
+    <div class="modal">
+
+        <div class="modal-title">Mark as Processed</div>
+
+        <div class="form-group">
+
+            <label class="form-label">Request No</label>
+
+            <input type="text" class="form-input" id="proc-reqno" readonly style="background:#f4f6fb;"/>
+
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+
+            <label class="form-label">Asset Tag</label>
+
+            <input type="text" class="form-input" id="proc-asset" placeholder="e.g. IOCL-LPT-0042"/>
+
+        </div>
+
+        <div class="form-group" style="margin-top:12px;">
+
+            <label class="form-label">Serial Number</label>
+
+            <input type="text" class="form-input" id="proc-serial" placeholder="e.g. SN2024XYZ"/>
+
+        </div>
+
+        <div class="modal-actions">
+
+            <button class="btn btn-ghost" onclick="closeModal('processModal')">Cancel</button>
+
+            <button class="btn btn-primary" onclick="confirmProcess()">Mark Processed</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Close Modal -->
+
+<div class="modal-overlay" id="closeModal">
+
+    <div class="modal">
+
+        <div class="modal-title">Close Request</div>
+
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:8px;">Are you sure you want to close request <strong id="close-reqno"></strong>? This confirms the employee has received the hardware.</p>
+
+        <div class="modal-actions">
+
+            <button class="btn btn-ghost" onclick="closeModal('closeModal')">Cancel</button>
+
+            <button class="btn btn-primary" onclick="confirmClose()">Yes, Close Request</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Submit Draft Modal -->
+
+<div class="modal-overlay" id="submitDraftModal">
+
+    <div class="modal">
+
+        <div class="modal-title">Submit Request for Approval</div>
+
+        <p style="color:var(--text-muted);font-size:14px;margin-bottom:8px;">Submit <strong id="submit-reqno"></strong> to IS GM for approval? Once submitted you cannot edit it.</p>
+
+        <div class="modal-actions">
+
+            <button class="btn btn-ghost" onclick="closeModal('submitDraftModal')">Cancel</button>
+
+            <button class="btn btn-orange" onclick="confirmSubmitDraft()">Submit for Approval</button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- Toast -->
+
+<div id="toast"></div>
+
+
+
+
+
+<script>
+
+    const API = 'http://localhost:8080/api';
+
+    let currentUser = null;
+
+    let pendingAction = {};
+
+
+
+    // ── CAPTCHA ──────────────────────────────────────────────────────────
+
+    let captchaAnswer = 0;
+
+    function newCaptcha() {
+
+        const canvas = document.getElementById('captchaCanvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        const W = canvas.width;
+        const H = canvas.height;
+
+        const a = Math.floor(Math.random() * 9) + 1;
+        const b = Math.floor(Math.random() * 9) + 1;
+
+        const op = Math.random() > 0.5 ? '+' : '-';
+
+        captchaAnswer = op === '+' ? a + b : a - b;
+
+        // clear canvas
+        ctx.clearRect(0, 0, W, H);
+
+        // background
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, W, H);
+
+        // noise lines
+        for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * W, Math.random() * H);
+            ctx.lineTo(Math.random() * W, Math.random() * H);
+            ctx.strokeStyle = 'rgba(2,22,79,0.08)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // text
+        ctx.textBaseline = 'middle';
+        ctx.font = 'bold 18px Arial';
+
+        const text = `${a} ${op} ${b} =`;
+        let x = 10;
+
+        for (let ch of text) {
+
+            const angle = (Math.random() - 0.5) * 0.3;
+
+            ctx.save();
+            ctx.translate(x + 7, H / 2);
+            ctx.rotate(angle);
+
+            ctx.fillStyle = (ch === '+' || ch === '-') ? '#F37022' : '#02164F';
+            ctx.fillText(ch, 0, 0);
+
+            ctx.restore();
+
+            x += (ch === ' ') ? 6 : 14;
+        }
+
+        // reset input
+        document.getElementById('captchaAnswer').value = '';
+        document.getElementById('captchaBox').classList.remove('error');
+    }
+    window.addEventListener('DOMContentLoaded', newCaptcha);
+
+
+
+    // ── LOGIN ────────────────────────────────────────────────────────────
+
+    function fillDemo(code,pass){document.getElementById('empCode').value=code;document.getElementById('password').value=pass;}
+
+    function togglePass(){const inp=document.getElementById('password');const show=inp.type==='password';inp.type=show?'text':'password';document.getElementById('eyeIcon').innerHTML=show?'<line x1="1" y1="1" x2="23" y2="23"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07A3 3 0 1 1 9.88 9.88"/><path d="M6.53 6.53A18.43 18.43 0 0 0 1 12s4 8 11 8a9.12 9.12 0 0 0 4.76-1.36"/>':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';}
+
+    document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('screen-login').classList.contains('active'))handleLogin();});
+
+
+
+    async function handleLogin(){
+
+        const empCode=document.getElementById('empCode').value.trim();
+
+        const password=document.getElementById('password').value.trim();
+
+        const userAns=parseInt(document.getElementById('captchaAnswer').value,10);
+
+        const btn=document.getElementById('loginBtn');
+
+        const err=document.getElementById('errorMsg');
+
+        if(!empCode||!password){showLoginError('Please enter both employee code and password');return;}
+
+        if(isNaN(userAns)||userAns!==captchaAnswer){
+
+            document.getElementById('captchaBox').classList.add('error');
+
+            showLoginError('Incorrect answer — please solve the verification sum');
+
+            newCaptcha(); return;
+
+        }
+
+        btn.classList.add('loading'); err.classList.remove('show');
+
+        document.getElementById('captchaBox').classList.remove('error');
+
+        try{
+
+            const res=await fetch(`${API}/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empCode,password})});
+
+            const data=await res.json();
+
+            if(data.success){currentUser=data;showDashboard(data);}
+
+            else{btn.classList.remove('loading');showLoginError('Invalid employee code or password');newCaptcha();}
+
+        }catch(e){btn.classList.remove('loading');showLoginError('Cannot connect — is Spring Boot running on port 8080?');}
+
+    }
+
+
+
+    function showLoginError(msg){const el=document.getElementById('errorMsg');el.textContent=msg;el.classList.add('show');}
+
+
+
+    function showDashboard(user){
+
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+
+        const screen=document.getElementById('screen-'+user.role);
+
+        if(screen){
+
+            screen.classList.add('active');
+
+            const nameEl=document.getElementById('user-'+user.role);
+
+            if(nameEl) nameEl.textContent=user.empName;
+
+        }
+
+        // load initial data per role
+
+        if(user.role==='EMPLOYEE'){
+
+            document.getElementById('emp-greeting').textContent=user.empName.split(' ')[0];
+
+            loadMyRequests();
+
+        } else if(user.role==='IS_GM'){
+
+            loadPending(); loadGMApproved(); loadGMRejected();
+
+        } else if(user.role==='PROCESSING_TEAM'){
+
+            loadApproved(); loadProcessed();
+
+        } else if(user.role==='ADMIN'){
+
+            loadAdminStats(); loadAllRequests(); loadAllUsers();
+
+        }
+
+    }
+
+
+
+    function logout(){
+
+        currentUser=null;
+
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+
+        document.getElementById('screen-login').classList.add('active');
+
+        document.getElementById('empCode').value='';
+
+        document.getElementById('password').value='';
+
+        document.getElementById('loginBtn').classList.remove('loading');
+
+        document.getElementById('errorMsg').classList.remove('show');
+
+        newCaptcha();
+
+    }
+
+
+
+    // ── TOAST ────────────────────────────────────────────────────────────
+
+    function toast(msg, type='info'){
+
+        const t=document.getElementById('toast');
+
+        t.textContent=msg; t.className='show '+type;
+
+        clearTimeout(t._to); t._to=setTimeout(()=>t.className='',3000);
+
+    }
+
+
+
+    // ── MODAL HELPERS ────────────────────────────────────────────────────
+
+    function openModal(id){document.getElementById(id).classList.add('open');}
+
+    function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+
+
+    // ── STATUS BADGE HTML ────────────────────────────────────────────────
+
+    function badge(status){
+
+        const map={DRAFT:'draft',SUBMITTED:'submitted',APPROVED:'approved',REJECTED:'rejected',PROCESSED:'processed',CLOSED:'closed'};
+
+        return `<span class="badge badge-${map[status]||'draft'}">${status}</span>`;
+
+    }
+
+    function priBadge(p){return `<span class="pri-${p.toLowerCase()}">${p}</span>`;}
+
+
+
+    // ── EMPLOYEE: load requests ──────────────────────────────────────────
+
+    async function loadMyRequests(){
+
+        if(!currentUser) return;
+
+        try{
+
+            const res=await fetch(`${API}/requests/my?userId=${currentUser.userId}`);
+
+            const data=await res.json();
+
+            renderEmpTable('emp-recent-tbody', data, 5);
+
+            renderEmpTable('emp-all-tbody', data);
+
+            // stats
+
+            document.getElementById('emp-stat-total').textContent=data.length;
+
+            document.getElementById('emp-stat-pending').textContent=data.filter(r=>r.status==='SUBMITTED').length;
+
+            document.getElementById('emp-stat-approved').textContent=data.filter(r=>r.status==='APPROVED'||r.status==='PROCESSED'||r.status==='CLOSED').length;
+
+            document.getElementById('emp-stat-rejected').textContent=data.filter(r=>r.status==='REJECTED').length;
+
+        }catch(e){toast('Could not load requests','error');}
+
+    }
+
+
+
+    function renderEmpTable(tbodyId, data, limit){
+
+        const tbody=document.getElementById(tbodyId);
+
+        const rows=limit?data.slice(0,limit):data;
+
+        if(!rows.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">No requests found.</td></tr>';return;}
+
+        tbody.innerHTML=rows.map(r=>`
+
+    <tr>
+
+      <td><strong>${r.requestNo}</strong></td>
+
+      <td>${hwName(r.hardwareId)}</td>
+
+      <td>${r.quantity}</td>
+
+      <td>${priBadge(r.priority)}</td>
+
+      <td>${r.requiredDate||'—'}</td>
+
+      <td>${badge(r.status)}</td>
+
+      <td>${r.status==='DRAFT'?`<button class="btn btn-orange btn-sm" onclick="openSubmitDraft('${r.requestNo}')">Submit</button>`:'—'}</td>
+
+    </tr>`).join('');
+
+    }
+
+
+
+    // ── EMPLOYEE: create request ─────────────────────────────────────────
+
+    async function submitNewRequest(){
+
+        const hwType=document.getElementById('hw-type').value;
+
+        const qty=parseInt(document.getElementById('hw-qty').value);
+
+        const priority=document.getElementById('hw-priority').value;
+
+        const date=document.getElementById('hw-date').value;
+
+        const just=document.getElementById('hw-justification').value.trim();
+
+        if(!hwType||!qty||!date||!just){toast('Please fill all fields','error');return;}
+
+        if(qty<1){toast('Quantity must be at least 1','error');return;}
+
+        try{
+
+            const res=await fetch(`${API}/requests/create`,{method:'POST',headers:{'Content-Type':'application/json'},
+
+                body:JSON.stringify({userId:currentUser.userId,hardwareId:parseInt(hwType),quantity:qty,justification:just,priority,requiredDate:date})});
+
+            const data=await res.json();
+
+            if(data.success){toast(`Request ${data.requestNo} created as Draft!`,'success');clearForm();loadMyRequests();empTab('myrequests',null);}
+
+            else toast('Failed to create request','error');
+
+        }catch(e){toast('Server error','error');}
+
+    }
+
+    function clearForm(){document.getElementById('hw-type').value='';document.getElementById('hw-qty').value='';document.getElementById('hw-priority').value='MEDIUM';document.getElementById('hw-date').value='';document.getElementById('hw-justification').value='';}
+
+
+
+    // ── EMPLOYEE: submit draft ───────────────────────────────────────────
+
+    function openSubmitDraft(reqNo){document.getElementById('submit-reqno').textContent=reqNo;pendingAction.reqNo=reqNo;openModal('submitDraftModal');}
+
+    async function confirmSubmitDraft(){
+
+        closeModal('submitDraftModal');
+
+        try{
+
+            const res=await fetch(`${API}/requests/submit`,{method:'POST',headers:{'Content-Type':'application/json'},
+
+                body:JSON.stringify({requestNo:pendingAction.reqNo,userId:currentUser.userId})});
+
+            const data=await res.json();
+
+            toast(data.success?'Request submitted for approval!':'Could not submit — check status',data.success?'success':'error');
+
+            loadMyRequests();
+
+        }catch(e){toast('Server error','error');}
+
+    }
+
+
+
+    // ── GM: load pending ─────────────────────────────────────────────────
+
+    async function loadPending(){
+
+        try{
+
+            const res=await fetch(`${API}/requests/pending`);
+
+            const data=await res.json();
+
+            document.getElementById('gm-stat-pending').textContent=data.length;
+
+            const tbody=document.getElementById('gm-pending-tbody');
+
+            if(!data.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">No pending approvals.</td></tr>';return;}
+
+            tbody.innerHTML=data.map(r=>`
+
+      <tr>
+
+        <td><strong>${r.requestNo}</strong></td>
+
+        <td>${hwName(r.hardwareId)}</td>
+
+        <td>${r.quantity}</td>
+
+        <td>${priBadge(r.priority)}</td>
+
+        <td>${r.requiredDate||'—'}</td>
+
+        <td>${r.createdOn?r.createdOn.split('T')[0]:'—'}</td>
+
+        <td style="display:flex;gap:6px;">
+
+          <button class="btn btn-success btn-sm" onclick="openApprove('${r.requestNo}')">Approve</button>
+
+          <button class="btn btn-danger btn-sm" onclick="openReject('${r.requestNo}')">Reject</button>
+
+        </td>
+
+      </tr>`).join('');
+
+        }catch(e){toast('Could not load pending requests','error');}
+
+    }
+
+
+
+    async function loadGMApproved(){
+
+        try{
+
+            const res=await fetch(`${API}/requests/approved`);
+
+            const data=await res.json();
+
+            document.getElementById('gm-stat-approved').textContent=data.length;
+
+            const tbody=document.getElementById('gm-approved-tbody');
+
+            if(!data.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">No approved requests.</td></tr>';return;}
+
+            tbody.innerHTML=data.map(r=>`<tr><td><strong>${r.requestNo}</strong></td><td>${hwName(r.hardwareId)}</td><td>${r.quantity}</td><td>${priBadge(r.priority)}</td><td>${r.approvedBy||'—'}</td><td>${r.approvedDate||'—'}</td><td>${badge(r.status)}</td></tr>`).join('');
+
+        }catch(e){}
+
+    }
+
+
+
+    async function loadGMRejected(){
+
+        try{
+
+            const res=await fetch(`${API}/requests/my?userId=0`).catch(()=>({json:()=>[]}));
+
+            // fallback: just show empty if no endpoint
+
+            const tbody=document.getElementById('gm-rejected-tbody');
+
+            tbody.innerHTML='<tr class="empty-row"><td colspan="5">No rejected requests found.</td></tr>';
+
+            document.getElementById('gm-stat-rejected').textContent='—';
+
+        }catch(e){}
+
+    }
+
+
+
+    function openApprove(reqNo){
+
+        document.getElementById('modal-reqno').value=reqNo;
+
+        document.getElementById('modal-remarks').value='';
+
+        document.getElementById('approveModalTitle').textContent='Approve Request';
+
+        document.getElementById('modal-approve-btn').style.display='';
+
+        document.getElementById('modal-reject-btn').style.display='none';
+
+        pendingAction={type:'approve',reqNo};
+
+        openModal('approveModal');
+
+    }
+
+    function openReject(reqNo){
+
+        document.getElementById('modal-reqno').value=reqNo;
+
+        document.getElementById('modal-remarks').value='';
+
+        document.getElementById('approveModalTitle').textContent='Reject Request';
+
+        document.getElementById('modal-approve-btn').style.display='none';
+
+        document.getElementById('modal-reject-btn').style.display='';
+
+        pendingAction={type:'reject',reqNo};
+
+        openModal('approveModal');
+
+    }
+
+    async function confirmApprove(){
+
+        closeModal('approveModal');
+
+        const remarks=document.getElementById('modal-remarks').value;
+
+        try{
+
+            const res=await fetch(`${API}/requests/approve`,{method:'POST',headers:{'Content-Type':'application/json'},
+
+                body:JSON.stringify({requestNo:pendingAction.reqNo,gmName:currentUser.empName,remarks})});
+
+            const data=await res.json();
+
+            toast(data.success?'Request approved!':'Could not approve',data.success?'success':'error');
+
+            loadPending(); loadGMApproved();
+
+        }catch(e){toast('Server error','error');}
+
+    }
+
+    async function confirmReject(){
+
+        closeModal('approveModal');
+
+        const remarks=document.getElementById('modal-remarks').value;
+
+        try{
+
+            const res=await fetch(`${API}/requests/reject`,{method:'POST',headers:{'Content-Type':'application/json'},
+
+                body:JSON.stringify({requestNo:pendingAction.reqNo,gmName:currentUser.empName,remarks})});
+
+            const data=await res.json();
+
+            toast(data.success?'Request rejected':'Could not reject',data.success?'info':'error');
+
+            loadPending();
+
+        }catch(e){toast('Server error','error');}
+
+    }
+
+
+
+    // ── PROCESSING TEAM ──────────────────────────────────────────────────
+
+    async function loadApproved(){
+
+        try{
+
+            const res=await fetch(`${API}/requests/approved`);
+
+            const data=await res.json();
+
+            document.getElementById('pt-stat-pending').textContent=data.length;
+
+            const tbody=document.getElementById('pt-approved-tbody');
+
+            if(!data.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">No approved requests to process.</td></tr>';return;}
+
+            tbody.innerHTML=data.map(r=>`
+
+      <tr>
+
+        <td><strong>${r.requestNo}</strong></td>
+
+        <td>${hwName(r.hardwareId)}</td>
+
+        <td>${r.quantity}</td>
+
+        <td>${priBadge(r.priority)}</td>
+
+        <td>${r.approvedBy||'—'}</td>
+
+        <td>${r.approvedDate||'—'}</td>
+
+        <td><button class="btn btn-primary btn-sm" onclick="openProcess('${r.requestNo}')">Process</button></td>
+
+      </tr>`).join('');
+
+        }catch(e){toast('Could not load approved requests','error');}
+
+    }
+
+
+
+    async function loadProcessed(){
+
+        try{
+
+            const res=await fetch(`${API}/requests/pending`); // reuse — filter on client
+
+            // We need a "processed" endpoint ideally, but for now just show message
+
+            const tbody=document.getElementById('pt-processed-tbody');
+
+            tbody.innerHTML='<tr class="empty-row"><td colspan="6">Processed requests will appear here.</td></tr>';
+
+            document.getElementById('pt-stat-done').textContent='—';
+
+        }catch(e){}
+
+    }
+
+
+
+    function openProcess(reqNo){
+
+        document.getElementById('proc-reqno').value=reqNo;
+
+        document.getElementById('proc-asset').value='';
+
+        document.getElementById('proc-serial').value='';
+
+        pendingAction.reqNo=reqNo;
+
+        openModal('processModal');
+
+    }
+
+    async function confirmProcess(){
+
+        const asset=document.getElementById('proc-asset').value.trim();
+
+        const serial=document.getElementById('proc-serial').value.trim();
+
+        if(!asset||!serial){toast('Please enter asset tag and serial number','error');return;}
+
+        closeModal('processModal');
+
+        try{
+
+            const res=await fetch(`${API}/requests/process`,{method:'POST',headers:{'Content-Type':'application/json'},
+
+                body:JSON.stringify({requestNo:pendingAction.reqNo,assetTag:asset,serialNo:serial})});
+
+            const data=await res.json();
+
+            toast(data.success?'Marked as processed!':'Could not process',data.success?'success':'error');
+
+            loadApproved();
+
+        }catch(e){toast('Server error','error');}
+
+    }
+
+
+
+    function openClose(reqNo){
+
+        document.getElementById('close-reqno').textContent=reqNo;
+
+        pendingAction.reqNo=reqNo;
+
+        openModal('closeModal');
+
+    }
+
+    async function confirmClose(){
+
+        closeModal('closeModal');
+
+        try{
+
+            const res=await fetch(`${API}/requests/close`,{method:'POST',headers:{'Content-Type':'application/json'},
+
+                body:JSON.stringify({requestNo:pendingAction.reqNo})});
+
+            const data=await res.json();
+
+            toast(data.success?'Request closed!':'Could not close',data.success?'success':'error');
+
+            loadProcessed();
+
+        }catch(e){toast('Server error','error');}
+
+    }
+
+
+
+    // ── ADMIN ────────────────────────────────────────────────────────────
+
+    async function loadAdminStats(){
+
+        try{
+
+            // load all requests and compute stats
+
+            const res=await fetch(`${API}/requests/all`).catch(()=>null);
+
+            if(!res||!res.ok){
+
+                // fallback: use pending + approved
+
+                const [p,a]=await Promise.all([fetch(`${API}/requests/pending`),fetch(`${API}/requests/approved`)]);
+
+                const pending=await p.json(), approved=await a.json();
+
+                const total=pending.length+approved.length;
+
+                document.getElementById('admin-stat-total').textContent=total;
+
+                document.getElementById('admin-stat-submitted').textContent=pending.length;
+
+                document.getElementById('admin-stat-approved').textContent=approved.length;
+
+                document.getElementById('admin-stat-rejected').textContent='—';
+
+                renderReportBars({SUBMITTED:pending.length,APPROVED:approved.length});
+
+                return;
+
+            }
+
+            const data=await res.json();
+
+            const counts={};
+
+            data.forEach(r=>{counts[r.status]=(counts[r.status]||0)+1;});
+
+            document.getElementById('admin-stat-total').textContent=data.length;
+
+            document.getElementById('admin-stat-submitted').textContent=counts['SUBMITTED']||0;
+
+            document.getElementById('admin-stat-approved').textContent=counts['APPROVED']||0;
+
+            document.getElementById('admin-stat-rejected').textContent=counts['REJECTED']||0;
+
+            renderReportBars(counts, data.length);
+
+        }catch(e){}
+
+    }
+
+
+
+    function renderReportBars(counts, total){
+
+        const statuses=['DRAFT','SUBMITTED','APPROVED','REJECTED','PROCESSED','CLOSED'];
+
+        const colors={DRAFT:'#94a3b8',SUBMITTED:'#d97706',APPROVED:'#16a34a',REJECTED:'#dc2626',PROCESSED:'#02164F',CLOSED:'#cbd5e1'};
+
+        const t=total||Object.values(counts).reduce((a,b)=>a+b,0)||1;
+
+        document.getElementById('admin-report-body').innerHTML=`
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+
+    ${statuses.map(s=>`
+
+      <div class="report-bar-row">
+
+        <div class="report-bar-label">${s}</div>
+
+        <div class="report-bar-track"><div class="report-bar-fill" style="width:${Math.round(((counts[s]||0)/t)*100)}%;background:${colors[s]}"></div></div>
+
+        <div class="report-bar-count">${counts[s]||0}</div>
+
+      </div>`).join('')}
+
+    </div>`;
+
+    }
+
+
+
+    async function loadAllRequests(){
+
+        try{
+
+            const [p,a]=await Promise.all([fetch(`${API}/requests/pending`),fetch(`${API}/requests/approved`)]);
+
+            const data=[...await p.json(),...await a.json()];
+
+            const tbody=document.getElementById('admin-all-tbody');
+
+            if(!data.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">No requests found.</td></tr>';return;}
+
+            tbody.innerHTML=data.map(r=>`<tr><td><strong>${r.requestNo}</strong></td><td>${r.requestedBy}</td><td>${hwName(r.hardwareId)}</td><td>${r.quantity}</td><td>${priBadge(r.priority)}</td><td>${badge(r.status)}</td><td>${r.createdOn?r.createdOn.split('T')[0]:'—'}</td></tr>`).join('');
+
+        }catch(e){}
+
+    }
+
+
+
+    async function loadAllUsers(){
+        try{
+            const res = await fetch(`${API}/users`);
+            const data = await res.json();
+            const roleMap = {1:'EMPLOYEE', 2:'IS GM', 3:'PROCESSING', 4:'ADMIN'};
+            const tbody = document.getElementById('admin-users-tbody');
+            if(!data.length){
+                tbody.innerHTML='<tr class="empty-row"><td colspan="6">No users found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(u=>`
+      <tr>
+        <td>${u.userId}</td>
+        <td><strong>${u.empCode}</strong></td>
+        <td>${u.empName}</td>
+        <td>${u.department||'—'}</td>
+        <td><span class="badge badge-submitted">${roleMap[u.roleId]||'UNKNOWN'}</span></td>
+        <td><span class="badge badge-approved">${u.status}</span></td>
+      </tr>`).join('');
+        }catch(e){
+            toast('Could not load users','error');
+        }
+    }
+
+    // ── TAB SWITCHERS ────────────────────────────────────────────────────
+
+    function switchTab(prefix, name, el){
+
+        document.querySelectorAll(`[id^="${prefix}-"]`).forEach(p=>p.classList.remove('active'));
+
+        document.getElementById(`${prefix}-${name}`).classList.add('active');
+
+        if(el){el.closest('.sidebar').querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
+
+    }
+
+    function empTab(name,el){
+
+        switchTab('emp',name,el);
+
+        if(name==='myrequests'||name==='overview') loadMyRequests();
+
+    }
+
+    function gmTab(name,el){
+
+        switchTab('gm',name,el);
+
+        if(name==='pending') loadPending();
+
+        else if(name==='approved') loadGMApproved();
+
+        else if(name==='rejected') loadGMRejected();
+
+    }
+
+    function ptTab(name,el){
+
+        switchTab('pt',name,el);
+
+        if(name==='toprocess') loadApproved();
+
+        else if(name==='processed') loadProcessed();
+
+    }
+
+    function adminTab(name,el){
+
+        switchTab('admin',name,el);
+
+        if(name==='overview') loadAdminStats();
+
+        else if(name==='allrequests') loadAllRequests();
+
+        else if(name==='users'){ loadAllUsers(); loadPendingRegs();
+
+        }}
+
+
+
+    // ── HARDWARE NAME MAP ────────────────────────────────────────────────
+
+    function hwName(id){
+
+        const map={1:'Laptop',2:'Desktop PC',3:'iPad/Tablet',4:'Pendrive',5:'External HDD',6:'VC Setup',7:'Accessories'};
+
+        return map[id]||`HW-${id}`;
+
+    }
+
+
+
+    // close modals on overlay click
+
+    document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+    // ── SCREEN NAVIGATION ────────────────────────────────────────────────
+    function showRegister(){
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+        document.getElementById('screen-register').classList.add('active');
+    }
+    function showLogin(){
+        document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+        document.getElementById('screen-login').classList.add('active');
+    }
+
+    // ── REGISTRATION ─────────────────────────────────────────────────────
+    async function submitRegistration(){
+        const empCode     = document.getElementById('reg-empcode').value.trim();
+        const empName     = document.getElementById('reg-name').value.trim();
+        const email       = document.getElementById('reg-email').value.trim();
+        const department  = document.getElementById('reg-dept').value;
+        const designation = document.getElementById('reg-designation').value.trim();
+        const location    = document.getElementById('reg-location').value;
+        const mobileNo    = document.getElementById('reg-mobile').value.trim();
+        const password    = document.getElementById('reg-password').value;
+        const confirm     = document.getElementById('reg-confirm').value;
+
+        const errEl = document.getElementById('reg-error');
+        const sucEl = document.getElementById('reg-success');
+        errEl.style.display='none'; sucEl.style.display='none';
+
+        // validations
+        if(!empCode||!empName||!email||!department||!designation||!location||!mobileNo||!password){
+            errEl.textContent='Please fill in all fields.'; errEl.style.display='block'; return;
+        }
+        if(password.length < 8){
+            errEl.textContent='Password must be at least 8 characters.'; errEl.style.display='block'; return;
+        }
+        if(password !== confirm){
+            errEl.textContent='Passwords do not match.'; errEl.style.display='block'; return;
+        }
+        if(!email.endsWith('@iocl.in')){
+            errEl.textContent='Please use your official @iocl.in email address.'; errEl.style.display='block'; return;
+        }
+        if(!/^\d{10}$/.test(mobileNo)){
+            errEl.textContent='Mobile number must be exactly 10 digits.'; errEl.style.display='block'; return;
+        }
+
+        const btn = document.getElementById('reg-btn');
+        btn.disabled = true; btn.textContent = 'Submitting...';
+
+        try{
+            const res = await fetch(`${API}/register`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({empCode,empName,email,password,department,designation,location,mobileNo})
+            });
+            const data = await res.json();
+            if(data.success){
+                sucEl.textContent='Registration submitted successfully! You will be notified once Admin approves your account.';
+                sucEl.style.display='block';
+                // clear form
+                ['reg-empcode','reg-name','reg-email','reg-designation','reg-mobile','reg-password','reg-confirm']
+                    .forEach(id=>document.getElementById(id).value='');
+                document.getElementById('reg-dept').value='';
+                document.getElementById('reg-location').value='';
+                setTimeout(()=>showLogin(), 3000);
+            } else {
+                errEl.textContent = data.message || 'Registration failed.';
+                errEl.style.display='block';
+            }
+        } catch(e){
+            errEl.textContent='Cannot connect to server — is Spring Boot running?';
+            errEl.style.display='block';
+        }
+        btn.disabled=false; btn.textContent='Submit Registration';
+    }
+
+    // ── ADMIN: pending registrations ─────────────────────────────────────
+    async function loadPendingRegs(){
+        try{
+            const res = await fetch(`${API}/registrations/pending`);
+            const data = await res.json();
+            const tbody = document.getElementById('admin-pending-regs');
+            if(!data.length){
+                tbody.innerHTML='<tr class="empty-row"><td colspan="6">No pending registrations.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(u=>`
+      <tr>
+        <td><strong>${u.empCode}</strong></td>
+        <td>${u.empName}</td>
+        <td>${u.email}</td>
+        <td>${u.department||'—'}</td>
+        <td>${u.mobileNo||'—'}</td>
+        <td style="display:flex;gap:6px;">
+          <button class="btn btn-success btn-sm" onclick="approveReg(${u.userId})">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectReg(${u.userId})">Reject</button>
+        </td>
+      </tr>`).join('');
+        }catch(e){ toast('Could not load pending registrations','error'); }
+    }
+
+    async function approveReg(userId){
+        try{
+            const res = await fetch(`${API}/registrations/approve`,{
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({userId})
+            });
+            const data = await res.json();
+            toast(data.success ? 'User approved and activated!' : 'Could not approve', data.success?'success':'error');
+            loadPendingRegs(); loadAllUsers();
+        }catch(e){ toast('Server error','error'); }
+    }
+
+    async function rejectReg(userId){
+        try{
+            const res = await fetch(`${API}/registrations/reject`,{
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({userId})
+            });
+            const data = await res.json();
+            toast(data.success ? 'Registration rejected' : 'Could not reject', data.success?'info':'error');
+            loadPendingRegs();
+        }catch(e){ toast('Server error','error'); }
+    }
+</script>
+
+</body>
+
+</html>
+
+
+
+
+
+
